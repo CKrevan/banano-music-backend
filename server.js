@@ -18,7 +18,7 @@ app.post('/audio-formats', (req, res) => {
     const { url } = req.body;
     if (!url) return res.status(400).json({ error: 'URL requerida' });
 
-    const command = `yt-dlp -F --no-warnings "${url}"`;
+    const command = `yt-dlp -F --no-warnings --audio-quality 0 "${url}"`;
 
     exec(command, { timeout: 60000 }, (error, stdout, stderr) => {
         if (error || stderr.includes('ERROR')) {
