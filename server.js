@@ -13,11 +13,12 @@ app.get('/', (req, res) => {
     res.json({ status: 'Banano Music Backend funcionando 🎵' });
 });
 
-// Ruta para listar formatos de audio
+// Ruta para listar formatos de audio (mejorada y más robusta)
 app.post('/audio-formats', (req, res) => {
     const { url } = req.body;
     if (!url) return res.status(400).json({ error: 'URL requerida' });
 
+    // Comando mejorado para asegurar que encuentre formatos de audio
     const command = `yt-dlp -F --no-warnings --audio-quality 0 "${url}"`;
 
     exec(command, { timeout: 60000 }, (error, stdout, stderr) => {
@@ -30,7 +31,7 @@ app.post('/audio-formats', (req, res) => {
         const formats = [];
         let started = false;
         for (const line of lines) {
-            if (line.includes('audio only')) started = true;
+            if (line.includes('audio only') || line.includes('m4a') || line.includes('opus') || line.includes('webm')) started = true;
             if (started && line.match(/^\s*\d+/)) {
                 const parts = line.trim().split(/\s+/);
                 const id = parts[0];
@@ -43,6 +44,10 @@ app.post('/audio-formats', (req, res) => {
                     url: `https://${req.get('host')}/download-audio?id=${id}&url=${encodeURIComponent(url)}`
                 });
             }
+        }
+
+        if (formats.length === 0) {
+            return res.status(500).json({ error: 'No se encontraron formatos de audio (prueba otro enlace)' });
         }
 
         res.json({ formats });
@@ -76,5 +81,3 @@ app.get('/download-audio', (req, res) => {
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Servidor corriendo en puerto ${PORT}`));
-
-Mejorar búsqueda de formatos de audio
